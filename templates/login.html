@@ -1,0 +1,62 @@
+<!-- templates/login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - BookStore</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<!--
+DEFAULT CTF CREDENTIALS (welcome flag inside comment)
+username: test@example.com
+password: Welcome123
+FLAG (welcome): THM{welcome_flag_find_in_source}
+-->
+
+<nav>
+    <div class="logo">BookStore</div>
+    <ul class="nav-links">
+        <li><a href="{{ url_for('login') }}" class="active">Login</a></li>
+        <li><a href="{{ url_for('register') }}">Register</a></li>
+    </ul>
+</nav>
+
+<section class="login-section">
+    <h2>Login to Your Account</h2>
+    <p>Enter your email and password to access the site.</p>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form action="{{ url_for('login') }}" method="POST">
+        <input type="text" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <p class="signup-link">Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+    <p class="hint-text"><em>Hint: Sometimes typing unusual characters in the login fields can reveal secrets...</em></p>
+</section>
+
+<!-- flash-based popup -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <script>
+      const msgs = JSON.parse('{{ messages|tojson|safe }}');
+      // show each flashed message as a popup (type, text)
+      msgs.forEach(function(m){
+        // m = [category, message] or [message] depending; normalize
+        let cat = m[0];
+        let txt = m[1] || m[0];
+        alert(txt);
+      });
+    </script>
+  {% endif %}
+{% endwith %}
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

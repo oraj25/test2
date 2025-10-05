@@ -1,0 +1,134 @@
+<!-- templates/book.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ book.title }} - BookStore</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+      body { font-family: Arial, sans-serif; background:#fafafa; color:#111; margin:0; padding:0; }
+      .container{max-width:980px; margin:26px auto; padding:0 18px}
+      .book-details{display:flex; gap:20px; align-items:flex-start}
+      .book-image img{width:180px; height:auto; border-radius:6px; box-shadow:0 6px 18px rgba(0,0,0,0.08)}
+      .book-info h2{margin:0 0 8px 0}
+      .book-info p{margin:6px 0; line-height:1.4}
+      .reviews-section1{margin-top:26px; background:#fafafa; padding:16px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.04)}
+      textarea{width:100%; min-height:100px; padding:10px; border-radius:6px; border:1px solid #ddd; resize:vertical}
+      input[type="text"]{width:100%; padding:8px; border-radius:6px; border:1px solid #ddd}
+      button{margin-top:8px; padding:10px 14px; border-radius:6px; background:#569e5a; color:#fff; border:none; cursor:pointer}
+      .reviews-container{ margin-top: 18px; display:flex; flex-direction:column; gap:12px; }
+      .review { background:#f6f7f8; padding:12px; border-radius:6px; color:#111; }
+      .review strong { display:block; margin-bottom:8px; color:#333 }
+      .flag-toast{ position: fixed; right: 18px; bottom: 18px; background:#fffbe6; color:#6a4b00; padding:12px 16px; border-radius:8px; box-shadow:0 6px 22px rgba(0,0,0,0.12); font-weight:700; z-index:1200; }
+      /* modal like profile */
+      .flag-modal-backdrop{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); z-index:1300; opacity:0; pointer-events:none; transition:opacity .25s ease; }
+      .flag-modal-backdrop.show{opacity:1; pointer-events:auto;}
+      .flag-modal{ background:linear-gradient(180deg,#0b0b0b,#101010); border-radius:12px; padding:20px 24px; width: min(520px, 92%); text-align:center; color:#dfffee; border:1px solid rgba(0,255,187,0.12); box-shadow:0 12px 40px rgba(0,0,0,0.7); }
+      .flag-title{font-size:1.05rem; font-weight:800; margin-bottom:8px;}
+      .flag-text{font-size:0.95rem; color:#dfffee; margin-bottom:12px;}
+      .flag-close{background:#00ff4c; color:#081217; border:none; padding:8px 14px; border-radius:8px; cursor:pointer; font-weight:700;}
+    </style>
+</head>
+<body>
+<nav>
+    <div class="logo">BookStore</div>
+    <ul class="nav-links">
+        <li><a href="{{ url_for('index') }}">Home</a></li>
+        <li><a href="{{ url_for('search') }}">Search</a></li>
+        <li><a href="{{ url_for('profile') }}">Profile</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+  <!-- Book Details Section -->
+  <section class="book-details" aria-labelledby="book-title">
+      <div class="book-image">
+          <img src="{{ url_for('static', filename='images/' + book.img) }}" alt="{{ book.title }}">
+      </div>
+      <div class="book-info">
+          <h2 id="book-title">{{ book.title }}</h2>
+          <p><strong>Author:</strong> {{ book.author }}</p>
+          <p><strong>Genre:</strong> {{ book.genre }}</p>
+          <p><strong>Description:</strong> {{ book.desc }}</p>
+          {% if special_flag %}
+            <div class="flag-message" style="margin-top:12px; background:#e6fffa; padding:10px; border-radius:6px; color:#0a6f5f;">
+              <strong>CTF Flag:</strong> {{ special_flag }}
+            </div>
+          {% endif %}
+      </div>
+  </section>
+
+  <!-- Reviews Section -->
+  <section class="reviews-section1" aria-labelledby="reviews-title">
+      <h2 id="reviews-title">Reader Reviews</h2>
+      <p>Share your thoughts about the book or read what others have to say. Sometimes, you might even uncover hidden secrets if you’re curious!</p>
+
+      <!-- Review Form (posts to this same /book route with id) -->
+      <form method="POST" action="{{ url_for('book', id=request.args.get('id')) }}">
+          <input type="text" name="author" placeholder="Your name (optional)" />
+          <textarea name="review" placeholder="Submit your review here " required></textarea>
+          <button type="submit">Submit Review</button>
+      </form>
+
+      <!-- Stored Reviews (rendered unsanitized for CTF: intentionally vulnerable) -->
+      <div class="reviews-container">
+          {% for r in reviews %}
+            <div class="review">
+              <strong>{{ r.author }}</strong>
+              <div class="review-body">{{ r.content | safe }}</div>
+            </div>
+          {% endfor %}
+      </div>
+
+      <p class="hint-text" style="margin-top:14px; color:#666;"><em>Hint: Some users leave unusual markup in reviews...</em></p>
+  </section>
+</div>
+
+<footer style="margin-top:22px; padding:16px 0; text-align:center; color:#777;">
+    <p>&copy; 2025 Online Bookstore. All rights reserved.</p>
+</footer>
+
+<!-- Flag modal (hidden by default) -->
+<div id="flagBackdrop" class="flag-modal-backdrop" aria-hidden="true">
+  <div id="flagModal" class="flag-modal" role="dialog" aria-modal="true">
+    <div class="flag-title">🎉 Nice find!</div>
+    <div class="flag-text" id="flagText">You found a flag.</div>
+    <button id="flagClose" class="flag-close">Close</button>
+  </div>
+</div>
+
+<script>
+  function showFlag(flagText){
+    try{
+      const back = document.getElementById('flagBackdrop');
+      const txt = document.getElementById('flagText');
+      txt.textContent = flagText;
+      back.classList.add('show');
+    }catch(e){ console.log(e); }
+  }
+  document.getElementById('flagClose').addEventListener('click', function(){
+    document.getElementById('flagBackdrop').classList.remove('show');
+  });
+</script>
+
+{% if special_flag %}
+  <script>
+    showFlag('{{ special_flag|tojson }}');
+  </script>'
+{% endif %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <script>
+      const msgs = JSON.parse('{{ messages|tojson|safe }}');
+      msgs.forEach(function(m){
+        const txt = m[1] || m[0];
+        showFlag(txt);
+      });
+    </script>
+  {% endif %}
+{% endwith %}
+
+</body>
+</html>

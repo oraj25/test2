@@ -1,0 +1,109 @@
+<!-- templates/search.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Books - BookStore</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+      /* minimal modal styling (matches other pages) */
+      .flag-modal-backdrop{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); z-index:1300; opacity:0; pointer-events:none; transition:opacity .2s ease; }
+      .flag-modal-backdrop.show{opacity:1; pointer-events:auto;}
+      .flag-modal{ background:linear-gradient(180deg,#0b0b0b,#101010); border-radius:12px; padding:18px 22px; width:min(520px,92%); text-align:center; color:#dfffee; border:1px solid rgba(0,255,187,0.12); box-shadow:0 12px 40px rgba(0,0,0,0.7); }
+      .flag-title{font-size:1.05rem; font-weight:800; margin-bottom:8px;}
+      .flag-text{font-size:0.95rem; color:#dfffee; margin-bottom:12px;}
+      .flag-close{background:#00c6ff; color:#081217; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700;}
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav>
+        <div class="logo">BookStore</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="{{ url_for('search') }}" class="active">Search</a></li>
+            <li><a href="{{ url_for('login') }}">Login</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
+        </ul>
+    </nav>
+
+    <!-- Search Section -->
+    <section class="search-section">
+        <h2>Find Your Next Read</h2>
+        <p>Explore thousands of books from classic literature to modern bestsellers. Use the search bar below to discover your favorite authors, genres, or trending books. Reading enriches your mind, opens new worlds, and inspires creativity. Here at BookStore, we make it easy to find your perfect book.</p>
+        
+        <form action="{{ url_for('search') }}" method="GET">
+            <input type="text" name="query" placeholder="Search by title, author, or genre" required value="{{ query|default('') }}">
+            <button type="submit">Search</button>
+        </form>
+    </section>
+
+    <!-- Book Results Section -->
+    <section class="search-results">
+        {% if query %}
+            <!-- Vulnerable: displaying user input directly for CTF -->
+            <p>You searched for: {{ query|safe }}</p>
+        {% else %}
+            <p>Popular and Recommended Books</p>
+        {% endif %}
+
+        {% if special_message %}
+            <div class="special-message">
+                <p>{{ special_message }}</p>
+            </div>
+        {% endif %}
+        
+        <div class="books-container">
+            {% for id, book in books.items() %}
+                {% if book.ctf != True %} {# Skip hidden CTF book #}
+                <div class="book">
+                    <a href="{{ url_for('book') }}?id={{ id }}">
+                        <img src="{{ url_for('static', filename='images/' + book.img) }}" alt="{{ book.title }}">
+                        <h3>{{ book.title }}</h3>
+                        <p>By {{ book.author }}. {{ book.desc }}</p>
+                    </a>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+    </section>
+    <p class="hint-text"><em>Hint: Some inputs are reflected immediately — sometimes encoding or Burp tricks help...</em></p>
+
+    <!-- Flag modal (hidden by default) -->
+    <div id="flagBackdrop" class="flag-modal-backdrop" aria-hidden="true">
+      <div id="flagModal" class="flag-modal" role="dialog" aria-modal="true">
+        <div class="flag-title">🎉 Nice find!</div>
+        <div class="flag-text" id="flagText">You found a flag.</div>
+        <button id="flagClose" class="flag-close">Close</button>
+      </div>
+    </div>
+
+    <script>
+      function showFlag(flagText){
+        const back = document.getElementById('flagBackdrop');
+        const txt = document.getElementById('flagText');
+        txt.textContent = flagText;
+        back.classList.add('show');
+      }
+      document.getElementById('flagClose').addEventListener('click', function(){
+        document.getElementById('flagBackdrop').classList.remove('show');
+      });
+    </script>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <script>
+          const msgs = JSON.parse('{{ messages|tojson|safe }}');
+          msgs.forEach(function(m){
+            const txt = m[1] || m[0];
+            showFlag(txt);
+          });
+        </script>
+      {% endif %}
+    {% endwith %}
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

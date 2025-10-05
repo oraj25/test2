@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>{{ user.name }} - Profile • BookStore</title>
+<style>
+  :root{
+    --bg:#1e1e1e; --card:#2a2a2a; --muted:#9aa0a6; --accent:#00c6ff; --glow:#00ffbb;
+  }
+  *{box-sizing:border-box}
+  body{
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    background:var(--bg);
+    color:#eee;
+    margin:0;
+  }
+  nav{
+    background: #222;
+    padding:14px 28px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 2px 6px rgba(0,0,0,0.6);
+  }
+  .logo{color:var(--accent); font-weight:700; font-size:1.25rem;}
+  .nav-links{list-style:none; display:flex; gap:18px; margin:0; padding:0;}
+  .nav-links a{color:#cfd6db; text-decoration:none;}
+  .nav-links a:hover{color:var(--accent)}
+  .profile-container{display:flex; gap:24px; max-width:1100px; margin:36px auto; padding:0 20px; animation:fadeIn 900ms ease both;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(18px)} to{opacity:1; transform:translateY(0)}}
+  .profile-sidebar{width:260px; background:var(--card); border-radius:10px; padding:22px; transition:transform .25s ease, box-shadow .25s ease;}
+  .profile-sidebar:hover{transform:translateY(-6px); box-shadow:0 8px 30px rgba(0,0,0,0.6);}
+  .avatar{width:88px; height:88px; border-radius:50%; background:var(--accent); color:#101010; display:flex; align-items:center; justify-content:center; font-size:2.1rem; font-weight:800; margin:0 auto 12px;}
+  .profile-header h2{margin:6px 0 2px; text-align:center;}
+  .profile-header p{margin:0; text-align:center; color:var(--muted); font-size:0.92rem;}
+  .sidebar-blurb{text-align:center; margin-top:12px; color:var(--muted); font-size:0.95rem;}
+  .sidebar-menu{list-style:none; padding:0; margin-top:18px; display:flex; flex-direction:column; gap:8px;}
+  .sidebar-menu a{display:block; padding:10px; border-radius:8px; color:#d6dbe0; text-decoration:none; transition:background .2s, transform .12s;}
+  .sidebar-menu a:hover{background:#232323; color:var(--accent); transform:translateX(6px);}
+  .profile-main{flex:1; background:var(--card); border-radius:10px; padding:26px; box-shadow:0 8px 30px rgba(0,0,0,0.6);}
+  .profile-main h2{color:var(--accent); margin-top:0;}
+  label{display:block; color:var(--muted); margin-top:12px; font-weight:600; font-size:0.9rem;}
+  input[readonly]{width:100%; padding:10px; margin-top:6px; border-radius:8px; border:1px solid #3a3a3a; background:#151515; color:#ddd;}
+  .recommendations{display:flex; gap:12px; margin-top:10px;}
+  .rec{background:#202020; border-radius:8px; padding:8px; display:flex; gap:10px; align-items:center; width:200px;}
+  .rec img{width:46px; height:66px; object-fit:cover; border-radius:4px;}
+  .membership-info{margin-top:18px; color:var(--muted); font-size:0.95rem;}
+  footer{background:#1a1a1a; color:var(--muted); padding:16px; text-align:center; margin-top:28px;}
+  /* Flag modal */
+  .flag-modal-backdrop{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); z-index:1200;
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .flag-modal-backdrop.show{opacity:1; pointer-events:auto;}
+  .flag-modal{
+    background:linear-gradient(180deg,#0b0b0b,#101010); border-radius:12px; padding:20px 24px; width: min(520px, 92%);
+    box-shadow:0 12px 40px rgba(0,0,0,0.7), 0 0 30px rgba(0,255,187,0.12);
+    border:1px solid rgba(0,255,187,0.12);
+    text-align:center; color:var(--glow);
+    transform:translateY(10px) scale(.98); transition:all .2s ease;
+  }
+  .flag-modal.show{transform:translateY(0) scale(1);}
+  .flag-title{font-size:1.05rem; font-weight:800; margin-bottom:8px;}
+  .flag-text{font-size:0.95rem; color:#dfffee; margin-bottom:12px;}
+  .flag-close{background:var(--accent); color:#081217; border:none; padding:8px 14px; border-radius:8px; cursor:pointer; font-weight:700;}
+  /* upload card */
+  .upload-card{margin-top:18px; background:#161616; border:1px solid #2b2b2b; padding:14px; border-radius:8px;}
+  .upload-input{display:flex; gap:10px; align-items:center;}
+  .upload-input input[type="file"]{background:#0f0f0f; color:#ddd; padding:8px; border-radius:6px; border:1px solid #333;}
+  .upload-btn{background:var(--accent); color:#081217; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:700;}
+  @media (max-width:800px){
+    .profile-container{flex-direction:column; padding:20px;}
+    .profile-sidebar{width:100%;}
+  }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">BookStore</div>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('index') }}">Home</a></li>
+    <li><a href="{{ url_for('search') }}">Search</a></li>
+    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    <li><a href="{{ url_for('profile', id=request.args.get('id','1')) }}" class="active">Profile</a></li>
+  </ul>
+</nav>
+
+<div class="profile-container">
+  <aside class="profile-sidebar">
+    <div class="avatar">{{ user.name.split(' ')[0][0]|upper }}</div>
+    <div class="profile-header">
+      <h2>{{ user.name }}</h2>
+      <p>{{ user.email }}</p>
+    </div>
+    <div class="sidebar-blurb">
+      <p>Member since <strong>{{ user.member_since }}</strong></p>
+      <p style="margin-top:6px;color:var(--muted)">Status: <span style="color:#0cf0a0">Active</span></p>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a href="{{ url_for('search') }}">Explore Books</a></li>
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+  </aside>
+
+  <main class="profile-main">
+    <h2>Account Overview</h2>
+    <p>Welcome back, <strong>{{ user.name }}</strong>. This page shows a snapshot of your account - membership details and recent activity.</p>
+
+    <section>
+      <h3>Basic Information</h3>
+      <form action="{{ url_for('profile') }}" method="GET" class="readonly-form">
+        <input type="hidden" name="id" value="{{ request.args.get('id','1') }}">
+        <label>Full Name</label>
+        <input type="text" value="{{ user.name }}" readonly>
+        <label>Email</label>
+        <input type="text" value="{{ user.email }}" readonly>
+        <label>Member Since</label>
+        <input type="text" value="{{ user.member_since }}" readonly>
+      </form>
+    </section>
+
+    <section class="upload-card">
+      <h4 style="margin:0 0 8px 0; color:var(--accent)">Upload a profile file</h4>
+      <p style="margin:0 0 10px 0; color:var(--muted)">This endpoint allows uploads (intentionally unsafe for CTF). Upload any file and check <code>/uploads/&lt;filename&gt;</code>.</p>
+      <form action="{{ url_for('upload_profile') }}" method="POST" enctype="multipart/form-data" class="upload-input">
+        <input type="file" name="file" required>
+        <button type="submit" class="upload-btn">Upload</button>
+      </form>
+      <p style="margin-top:8px; color:var(--muted); font-size:0.9rem;">CTF idea: upload a webshell (e.g., <code>shell.php</code>) then browse <code>/uploads/shell.php</code>.</p>
+    </section>
+
+    <section class="membership-info">
+      <h4>Recommended for you</h4>
+      <div class="recommendations">
+        <div class="rec">
+          <img src="{{ url_for('static', filename='images/book1.jpg') }}" alt="rec1">
+          <div><strong>To Kill a Mockingbird</strong><br><span style="color:var(--muted)">Harper Lee</span></div>
+        </div>
+        <div class="rec">
+          <img src="{{ url_for('static', filename='images/book4.jpg') }}" alt="rec2">
+          <div><strong>The Hobbit</strong><br><span style="color:var(--muted)">J.R.R. Tolkien</span></div>
+        </div>
+      </div>
+    </section>
+
+    <p style="margin-top:18px; color:var(--muted);"><em>Tip: curious users sometimes explore different IDs in the URL...</em></p>
+  </main>
+</div>
+
+<footer>
+  <p>&copy; 2025 Online Bookstore. All Rights Reserved.</p>
+</footer>
+
+<!-- Flag modal (hidden by default) -->
+<div id="flagBackdrop" class="flag-modal-backdrop" aria-hidden="true">
+  <div id="flagModal" class="flag-modal" role="dialog" aria-modal="true">
+    <div class="flag-title">🎉 Nice find!</div>
+    <div class="flag-text" id="flagText">You found a flag.</div>
+    <button id="flagClose" class="flag-close">Close</button>
+  </div>
+</div>
+
+<script>
+  function showFlag(flagText){
+    try{
+      const back = document.getElementById('flagBackdrop');
+      const txt = document.getElementById('flagText');
+      txt.textContent = flagText;
+      back.classList.add('show');
+    }catch(e){ console.log(e); }
+  }
+  document.getElementById('flagClose').addEventListener('click', function(){
+    document.getElementById('flagBackdrop').classList.remove('show');
+  });
+</script>
+
+{% if special_flag %}
+  <script>
+    showFlag('{{ special_flag|tojson }}');
+  </script>
+{% endif %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <script>
+      const msgs = ('{{ messages|tojson|safe }}');
+      msgs.forEach(function(m){
+        const txt = m[1] || m[0];
+        showFlag(txt);
+      });
+    </script>
+  {% endif %}
+{% endwith %}
+
+</body>
+</html>

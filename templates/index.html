@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Bookstore</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+    .flag-modal-backdrop{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); z-index:1300; opacity:0; pointer-events:none; transition:opacity .2s ease; }
+    .flag-modal-backdrop.show{opacity:1; pointer-events:auto;}
+    .flag-modal{ background:linear-gradient(180deg,#0b0b0b,#101010); border-radius:12px; padding:20px 24px; width: min(520px, 92%); text-align:center; color:#dfffee; border:1px solid rgba(0,255,187,0.12); box-shadow:0 12px 40px rgba(0,0,0,0.7); }
+    .flag-title{font-size:1.05rem; font-weight:800; margin-bottom:8px;}
+    .flag-text{font-size:0.95rem; color:#dfffee; margin-bottom:12px;}
+    .flag-close{background:#00c6ff; color:#081217; border:none; padding:8px 14px; border-radius:8px; cursor:pointer; font-weight:700;}
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">BookStore</div>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="{{ url_for('search') }}">Search</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        {% set user = session.get('user') %}
+        <section class="hero">
+            <h1>Welcome to BookStore{% if user %}, {{ user['name'] }}{% endif %}</h1>
+            <p>Discover a world of knowledge, stories, and adventures. From timeless classics to modern bestsellers, we bring books closer to you.</p>
+            <a href="{{ url_for('search') }}" class="btn">Explore Books</a>
+        </section>
+
+        <section class="importance">
+            <h2>The Importance of Books</h2>
+            <p>Books are windows to the world, offering knowledge, entertainment, and inspiration. They help us understand cultures, improve critical thinking, and enhance creativity. Reading regularly not only expands our vocabulary but also strengthens empathy by exposing us to diverse perspectives. In today's fast-paced digital age, books remain a vital source of deep learning and reflection.</p>
+        </section>
+
+        <section class="history">
+            <h2>The History of Books</h2>
+            <p>Books have evolved tremendously over the centuries. From ancient clay tablets and papyrus scrolls to the invention of the printing press in the 15th century, books have been a cornerstone of human civilization. Each era introduced innovations in how knowledge is recorded and shared, shaping the way societies communicate and preserve their heritage. Today, digital books complement traditional print, making literature more accessible than ever before.</p>
+        </section>
+
+        <section class="popular-books">
+            <h2>Popular Books</h2>
+            <div class="books-container">
+                {% for id, book in books.items() %}
+                    {% if not book.get('ctf') %}
+                    <div class="book">
+                        <a href="{{ url_for('book') }}?id={{ id }}">
+                            <img src="{{ url_for('static', filename='images/' ~ book.img) }}" alt="{{ book.title }}">
+                            <h3>{{ book.title }}</h3>
+                            <p>By {{ book.author }}. {{ book.desc }}</p>
+                        </a>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <div id="flagBackdrop" class="flag-modal-backdrop" aria-hidden="true">
+        <div id="flagModal" class="flag-modal" role="dialog" aria-modal="true">
+            <div class="flag-title">🎉 Nice find!</div>
+            <div class="flag-text" id="flagText">You found a flag.</div>
+            <button id="flagClose" class="flag-close">Close</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2025 Online Bookstore. All rights reserved.</p>
+    </footer>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <script>
+        const msgs = JSON.parse('{{ messages|tojson|safe }}');
+        msgs.forEach(function(m) {
+            let txt = m[1] || m[0];
+            alert(txt);
+        });
+        </script>
+      {% endif %}
+    {% endwith %}
+    <script>
+        // embed the flag in a JS variable but do NOT display it unless the page is framed
+        const INDEX_FLAG = ('{{ index_flag|tojson|safe }}');
+
+        function showFlag(flagText){
+        const back = document.getElementById('flagBackdrop');
+        const txt = document.getElementById('flagText');
+        txt.textContent = flagText;
+        back.classList.add('show');
+        }
+        document.getElementById('flagClose').addEventListener('click', function(){
+        document.getElementById('flagBackdrop').classList.remove('show');
+        });
+
+        // Auto-show flag only when page is loaded inside an iframe (i.e., framed by attacker)
+        try {
+        if (window.self !== window.top) {
+            // page is framed -> reveal the flag modal
+            showFlag(INDEX_FLAG);
+        }
+        } catch (e) {
+        // cross-origin access errors won't occur here since site is same-origin for the lab;
+        // keep silent on errors.
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

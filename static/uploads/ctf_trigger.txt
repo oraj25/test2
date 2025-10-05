@@ -1,0 +1,1 @@
+THM{your_shell_flag_here}

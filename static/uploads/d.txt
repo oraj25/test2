@@ -1,0 +1,63 @@
+-----------------
+[ VULNERABLE ]  -  2a42e43e-b4ef-4928-b324-d9eaa973e5b4.studio.experience.hyland.com  [ Cargo Collective ]
+[ DISCUSSION ]  -  [Issue #152](https://github.com/EdOverflow/can-i-take-over-xyz/issues/152)
+[ DOCUMENTATION ]  -  [Cargo Support Page](https://support.2.cargocollective.com/Using-a-Third-Party-Domain)
+
+
+
+-----------------
+[ VULNERABLE ]  -  dev.rpa.hyland.com  [ Uptimerobot ]
+[ DISCUSSION ]  -  [Issue #45](https://github.com/EdOverflow/can-i-take-over-xyz/issues/45)
+[ DOCUMENTATION ]  -  [Uptimerobot-Sub-takeover](https://exploit.linuxsec.org/uptimerobot-com-custom-domain-subdomain-takeover/)
+-----------------
+
+-----------------
+[ VULNERABLE ]  -  internal.sandbox.ncp.hyland.com  [ Cargo Collective ]
+[ DISCUSSION ]  -  [Issue #152](https://github.com/EdOverflow/can-i-take-over-xyz/issues/152)
+[ DOCUMENTATION ]  -  [Cargo Support Page](https://support.2.cargocollective.com/Using-a-Third-Party-Domain)
+-----------------
+
+
+-----------------
+[ VULNERABLE ]  -  litellm.ai.sandbox.experience.hyland.com  [ Cargo Collective ]
+[ DISCUSSION ]  -  [Issue #152](https://github.com/EdOverflow/can-i-take-over-xyz/issues/152)
+[ DOCUMENTATION ]  -  [Cargo Support Page](https://support.2.cargocollective.com/Using-a-Third-Party-Domain)
+
+
+-----------------
+[ VULNERABLE ]  -  particle.hyland.com  [ Uptimerobot ]
+[ DISCUSSION ]  -  [Issue #45](https://github.com/EdOverflow/can-i-take-over-xyz/issues/45)
+[ DOCUMENTATION ]  -  [Uptimerobot-Sub-takeover](https://exploit.linuxsec.org/uptimerobot-com-custom-domain-subdomain-takeover/)
+
+
+-----------------
+[ VULNERABLE ]  -  seu-admin.sandbox.experience.hyland.com  [ Cargo Collective ]
+[ DISCUSSION ]  -  [Issue #152](https://github.com/EdOverflow/can-i-take-over-xyz/issues/152)
+[ DOCUMENTATION ]  -  [Cargo Support Page](https://support.2.cargocollective.com/Using-a-Third-Party-Domain)
+-----------------
+
+[ VULNERABLE ]  -  styles.hyland.com  [ Uptimerobot ]
+[ DISCUSSION ]  -  [Issue #45](https://github.com/EdOverflow/can-i-take-over-xyz/issues/45)
+[ DOCUMENTATION ]  -  [Uptimerobot-Sub-takeover](https://exploit.linuxsec.org/uptimerobot-com-custom-domain-subdomain-takeover/)
+-----------------
+
+
+
+
+https://particle.hyland.com/
+
+dig +short CNAME particle.hyland.com
+# or
+host -t CNAME sparticle.hyland.com
+
+
+
+curl -I https://particle.hyland.com
+curl -v https://particle.hyland.com 2>&1 | sed -n '1,240p'
+
+
+openssl s_client -connect particle.hyland.com:443 -servername particle.hyland.com </dev/null 2>/dev/null | openssl x509 -noout -text
+
+curl -I -H "Host: attacker.example" http://18.203.241.241
+
+
